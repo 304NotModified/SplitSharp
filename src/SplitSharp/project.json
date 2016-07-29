@@ -1,0 +1,34 @@
+﻿{
+  "title": "SplitSharp",
+  "copyright": "Julian Verdurmen",
+  "description": "Easy split strings with escape characters or quoted values",
+  "authors": [ "Julian Verdurmen" ],
+  "packOptions": {
+    "summary": "The missing options for String.Split! Split a string with an escape character or escape values with quotes.\n\n  Features: \n - Highly customizable \n - No regexes used \n - Lazy evaluation. Supported platforms: .NET 1.0-4.6, .NET Core, NetStandard 1.0",
+    "tags": [ "String", "Split", "String.Split" ]
+  },
+
+  "version": "0.8-*",
+
+  "dependencies": {
+    "NETStandard.Library": "1.6.0"
+  },
+
+  "frameworks": {
+    "netstandard1.0": {
+      "imports": "dnxcore50",
+      "buildOptions": { "define": [ "NO_ASSEMBLY_GUID" ] }
+    },
+    "netstandard1.1": {
+      "imports": "dnxcore50"
+    },
+    "net35": {
+
+    },
+
+    "net10": {
+      "buildOptions": { "define": [ "CUSTOM_CSHARP_EXT" ] }
+    }
+
+  }
+}
