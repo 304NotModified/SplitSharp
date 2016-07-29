@@ -48,7 +48,7 @@ namespace SplitSharp.Tests
         [InlineData(@"a;;b", ';', ';', @"a;b")]
         [InlineData(@"abc", ';', ';', @"abc")]
         [InlineData(@"abc\;", ';', Backslash, @"abc;")]
-        [InlineData(@"abc;;", ';', ';', @"abc;")]
+        [InlineData(@"a'b'c''d", SingleQuote, SingleQuote, @"a,b,c'd")]
 
         void SplitStringWithEscape(string input, char splitChar, char escapeChar, string output)
         {
