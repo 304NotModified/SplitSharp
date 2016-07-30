@@ -77,6 +77,10 @@ namespace SplitSharp.Tests
         [InlineData(@"'abc'", ';', SingleQuote, SingleQuote, "abc")]
         [InlineData(@"'ab;c'", ';', SingleQuote, SingleQuote, "ab;c")]
         [InlineData(@"'ab\c'", ';', SingleQuote, SingleQuote, @"ab\c")]
+        [InlineData(@"'", ';', SingleQuote, SingleQuote, @"'")]
+        [InlineData(@"a'", ';', SingleQuote, SingleQuote, @"a'")]
+        [InlineData(@"\", ';', SingleQuote, SingleQuote, @"\")]
+        [InlineData(@"a\", ';', SingleQuote, SingleQuote, @"a\")]
 
         void SplitStringWithQuotes(string input, char splitChar, char quoteChar, char escapeChar, string output)
         {
@@ -86,8 +90,8 @@ namespace SplitSharp.Tests
         }
 
         [Theory]
-        [InlineData(';',';', Backslash)]
-        [InlineData(';',Backslash, ';')]
+        [InlineData(';', ';', Backslash)]
+        [InlineData(';', Backslash, ';')]
         void SplitStringNotSupported(char splitChar, char quoteChar, char escapeChar)
         {
             Assert.Throws<NotSupportedException>(() => StringSplitter.SplitQuoted("dont care", splitChar, quoteChar, escapeChar));
