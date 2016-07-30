@@ -1,6 +1,8 @@
 # SplitSharp
 
 [![Build status](https://ci.appveyor.com/api/projects/status/2c7ola6p5e3t6nlh?svg=true)](https://ci.appveyor.com/project/304NotModified/splitsharp)
+[![codecov](https://codecov.io/gh/304NotModified/SplitSharp/branch/master/graph/badge.svg)](https://codecov.io/gh/304NotModified/SplitSharp)
+
 
 Split#, Easy split string with escapes or quotes
 
