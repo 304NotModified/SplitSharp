@@ -71,6 +71,7 @@ namespace SplitSharp.Tests
         [InlineData(@"a;b'c;d", ';', SingleQuote, Backslash, "a,b'c,d")]
         [InlineData(@"a;\'b;c", ';', SingleQuote, Backslash, "a,'b,c")]
         [InlineData(@"a;''b;c", ';', SingleQuote, SingleQuote, "a,'b,c")]
+        [InlineData(@"a;''b;c'", ';', SingleQuote, SingleQuote, "a,'b,c'")]
         [InlineData(@"abc", ';', SingleQuote, SingleQuote, "abc")]
         [InlineData(@"abc'", ';', SingleQuote, SingleQuote, "abc'")]
         [InlineData(@"''abc'", ';', SingleQuote, SingleQuote, "'abc'")]
