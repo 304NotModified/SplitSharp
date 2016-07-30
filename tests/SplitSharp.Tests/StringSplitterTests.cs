@@ -52,6 +52,24 @@ namespace SplitSharp.Tests
 
         void SplitStringWithEscape(string input, char splitChar, char escapeChar, string output)
         {
+            if (splitChar == escapeChar)
+            {
+                //also test SplitWithSelfEscape
+                SplitWithSelfEscape2(input, splitChar, output);
+            }
+
+            SplitStringWithEscape2(input, splitChar, escapeChar, output);
+        }
+
+        private static void SplitWithSelfEscape2(string input, char splitChar, string output)
+        {
+            var strings = StringSplitter.SplitWithSelfEscape(input, splitChar).ToArray();
+            var result = string.Join(",", strings);
+            Assert.Equal(output, result);
+        }
+
+        private static void SplitStringWithEscape2(string input, char splitChar, char escapeChar, string output)
+        {
             var strings = StringSplitter.SplitWithEscape(input, splitChar, escapeChar).ToArray();
             var result = string.Join(",", strings);
             Assert.Equal(output, result);
@@ -59,6 +77,11 @@ namespace SplitSharp.Tests
 
         [Theory]
         [InlineData(null, ';', SingleQuote, Backslash, "")]
+        [InlineData(@"\", ';', SingleQuote, Backslash, @"\")]
+        [InlineData(@"'", ';', SingleQuote, Backslash, @"'")]
+        [InlineData(@"' ", ';', SingleQuote, Backslash, @"' ")]
+        [InlineData(@" ' ", ';', SingleQuote, Backslash, @" ' ")]
+        [InlineData(@" ; ", ';', SingleQuote, Backslash, @" , ")]
         [InlineData(@"abc", ';', SingleQuote, Backslash, "abc")]
         [InlineData(@"abc;", ';', SingleQuote, Backslash, "abc,")]
         [InlineData(@"abc'", ';', SingleQuote, Backslash, "abc'")]
@@ -82,6 +105,9 @@ namespace SplitSharp.Tests
         [InlineData(@"a'", ';', SingleQuote, SingleQuote, @"a'")]
         [InlineData(@"\", ';', SingleQuote, SingleQuote, @"\")]
         [InlineData(@"a\", ';', SingleQuote, SingleQuote, @"a\")]
+        [InlineData(@"\b", ';', SingleQuote, SingleQuote, @"\b")]
+        [InlineData(@"'\'", ';', SingleQuote, Backslash, @"'\'")]
+        [InlineData(@"'\''", ';', SingleQuote, Backslash, @"'\'")] //todo check case
 
         void SplitStringWithQuotes(string input, char splitChar, char quoteChar, char escapeChar, string output)
         {
