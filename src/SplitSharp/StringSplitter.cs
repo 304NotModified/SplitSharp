@@ -106,7 +106,7 @@ namespace SplitSharp
             }
         }
 
-        private static IEnumerable<string> SplitWithSelfEscape2(string text, char splitChar)
+        private static IEnumerable<string> SplitWithSelfEscape2(string text, char splitAndEscapeChar)
         {
             if (!string.IsNullOrEmpty(text))
             {
@@ -117,7 +117,7 @@ namespace SplitSharp
                 for (i = 0; i < text.Length; i++)
                 {
                     var c = text[i];
-                    var isSplitChar = c == splitChar;
+                    var isSplitChar = c == splitAndEscapeChar;
                     if (prevWasEscape)
                     {
                         if (isSplitChar)
@@ -133,13 +133,6 @@ namespace SplitSharp
                             prevWasEscape = false;
                             sb.Append(c);
                             yield return part;
-
-                            if (text.Length - 1 == i)
-                            {
-                                //done
-                                yield return string.Empty;
-                                break;
-                            }
                         }
                     }
                     else
