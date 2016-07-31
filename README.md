@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/304NotModified/SplitSharp/branch/master/graph/badge.svg)](https://codecov.io/gh/304NotModified/SplitSharp)
 
 
-Split#, Easy split string with escapes or quotes
+SplitSharp, Easy split string with escapes or quotes
 
 ## Usage
 
