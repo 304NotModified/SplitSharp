@@ -82,8 +82,9 @@ namespace SplitSharp.Tests
         /// Tests with ; as separator, quoted and escaped with '
         /// </summary>
         [Theory]
-        [InlineData(@";", @",")] //self escaped
+        [InlineData(@";", @",")] 
         [InlineData(@";;", @",,")]
+        [InlineData(@"a;", @"a,")]
         [InlineData(@"a;''b;c", "a,'b,c")]
         [InlineData(@"a;''b;c'", "a,'b,c'")]
         [InlineData(@"abc", "abc")]
@@ -112,6 +113,7 @@ namespace SplitSharp.Tests
         [InlineData(@"\", @"\")]
         [InlineData(@"'", @"'")]
         [InlineData(@"' ", @"' ")]
+        [InlineData(@"a'", "a'")]
         [InlineData(@" ' ", @" ' ")]
         [InlineData(@" ; ", @" , ")]
         [InlineData(@";", @",")]
