@@ -24,6 +24,7 @@ namespace SplitSharp.Tests
         [InlineData("  abc", ';', "  abc")]
         [InlineData(null, ';', "")]
         [InlineData("", ';', "")]
+        [InlineData(";", ';', ";")] //todo check case
         [InlineData("   ", ';', "   ")]
         [InlineData(@"a;b;;c", ';', @"a,b;c")]
         [InlineData(@"a;b;;;;c", ';', @"a,b;;c")]
