@@ -13,12 +13,12 @@ using System.Text;
 namespace SplitSharp
 {
     /// <summary>
-    ///     Split a string
+    /// Split a string
     /// </summary>
     public static class StringSplitter
     {
         /// <summary>
-        ///     Split string with escape. The escape char is the same as the splitchar
+        /// Split string with escape. The escape char is the same as the splitchar
         /// </summary>
         /// <param name="text"></param>
         /// <param name="splitChar">split char. escaped also with this char</param>
@@ -29,7 +29,7 @@ namespace SplitSharp
         }
 
         /// <summary>
-        ///     Split string with escape
+        /// Split string with escape
         /// </summary>
         /// <param name="text"></param>
         /// <param name="splitChar"></param>
@@ -126,7 +126,9 @@ namespace SplitSharp
                         }
                         else
                         {
-                            if (sb.Length > 0) sb.Length--;
+                            //if prevWasEscape, always appended so length >0
+                            //if (sb.Length > 0) 
+                            sb.Length--;
                             var part = sb.ToString();
                             //reset
                             sb.Length = 0;
@@ -154,14 +156,14 @@ namespace SplitSharp
 
 
         /// <summary>
-        ///     Split a string, optional quoted value
+        /// Split a string, optional quoted value
         /// </summary>
         /// <param name="text">Text to split</param>
         /// <param name="splitChar">Character to split the <paramref name="text" /></param>
         /// <param name="quoteChar">Quote character</param>
         /// <param name="escapeChar">
-        ///     Escape for the <paramref name="quoteChar" />, not escape for the <paramref name="splitChar" />
-        ///     , use quotes for that.
+        /// Escape for the <paramref name="quoteChar" />, not escape for the <paramref name="splitChar" />
+        /// , use quotes for that.
         /// </param>
         /// <returns></returns>
         public static IEnumerable<string> SplitQuoted(this string text, char splitChar, char quoteChar, char escapeChar)
