@@ -87,8 +87,6 @@ namespace SplitSharp.Tests
         [InlineData(@" ; ", ';', SingleQuote, Backslash, @" , ")]
         [InlineData(@";", ';', SingleQuote, Backslash, @",")]
         [InlineData(@";;", ';', SingleQuote, Backslash, @",,")]
-        [InlineData(@";", ';', SingleQuote, SingleQuote, @",")]
-        [InlineData(@";;", ';', SingleQuote, SingleQuote, @",,")]
         [InlineData(@"abc", ';', SingleQuote, Backslash, "abc")]
         [InlineData(@"abc;", ';', SingleQuote, Backslash, "abc,")]
         [InlineData(@"abc'", ';', SingleQuote, Backslash, "abc'")]
@@ -100,6 +98,11 @@ namespace SplitSharp.Tests
         [InlineData(@"a;'b;c", ';', SingleQuote, Backslash, "a,'b;c")]
         [InlineData(@"a;b'c;d", ';', SingleQuote, Backslash, "a,b'c,d")]
         [InlineData(@"a;\'b;c", ';', SingleQuote, Backslash, "a,'b,c")]
+        [InlineData(@"\b", ';', SingleQuote, Backslash, @"\b")]
+        [InlineData(@"'\'", ';', SingleQuote, Backslash, @"'\'")]
+        [InlineData(@"'\''", ';', SingleQuote, Backslash, @"'\'")] //todo check case
+        [InlineData(@";", ';', SingleQuote, SingleQuote, @",")] //self escaped
+        [InlineData(@";;", ';', SingleQuote, SingleQuote, @",,")]
         [InlineData(@"a;''b;c", ';', SingleQuote, SingleQuote, "a,'b,c")]
         [InlineData(@"a;''b;c'", ';', SingleQuote, SingleQuote, "a,'b,c'")]
         [InlineData(@"abc", ';', SingleQuote, SingleQuote, "abc")]
@@ -114,8 +117,7 @@ namespace SplitSharp.Tests
         [InlineData(@"\", ';', SingleQuote, SingleQuote, @"\")]
         [InlineData(@"a\", ';', SingleQuote, SingleQuote, @"a\")]
         [InlineData(@"\b", ';', SingleQuote, SingleQuote, @"\b")]
-        [InlineData(@"'\'", ';', SingleQuote, Backslash, @"'\'")]
-        [InlineData(@"'\''", ';', SingleQuote, Backslash, @"'\'")] //todo check case
+
 
         void SplitStringWithQuotes(string input, char splitChar, char quoteChar, char escapeChar, string output)
         {

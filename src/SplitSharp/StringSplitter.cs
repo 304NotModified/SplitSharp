@@ -371,7 +371,7 @@ namespace SplitSharp
                         else
                         {
                             sb.Append(escapeChar);
-                            sb.Append(quoteChar);
+                            sb.Append(c);
                         }
                     }
                     else if (isSplitChar)
