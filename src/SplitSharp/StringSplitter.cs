@@ -13,12 +13,12 @@ using System.Text;
 namespace SplitSharp
 {
     /// <summary>
-    /// Split a string 
+    ///     Split a string
     /// </summary>
     public static class StringSplitter
     {
         /// <summary>
-        /// Split string with escape. The escape char is the same as the splitchar
+        ///     Split string with escape. The escape char is the same as the splitchar
         /// </summary>
         /// <param name="text"></param>
         /// <param name="splitChar">split char. escaped also with this char</param>
@@ -29,7 +29,7 @@ namespace SplitSharp
         }
 
         /// <summary>
-        /// Split string with escape
+        ///     Split string with escape
         /// </summary>
         /// <param name="text"></param>
         /// <param name="splitChar"></param>
@@ -90,7 +90,6 @@ namespace SplitSharp
                                 yield return string.Empty;
                                 break;
                             }
-
                         }
                         else
                         {
@@ -105,10 +104,9 @@ namespace SplitSharp
                     yield return lastPart;
                 }
             }
-
         }
 
-        private static IEnumerable<string> SplitWithSelfEscape2(string text, char splitChar)
+        private static IEnumerable<string> SplitWithSelfEscape2(string text, char splitAndEscapeChar)
         {
             if (!string.IsNullOrEmpty(text))
             {
@@ -119,7 +117,7 @@ namespace SplitSharp
                 for (i = 0; i < text.Length; i++)
                 {
                     var c = text[i];
-                    var isSplitChar = c == splitChar;
+                    var isSplitChar = c == splitAndEscapeChar;
                     if (prevWasEscape)
                     {
                         if (isSplitChar)
@@ -135,13 +133,6 @@ namespace SplitSharp
                             prevWasEscape = false;
                             sb.Append(c);
                             yield return part;
-
-                            if (text.Length - 1 == i)
-                            {
-                                //done
-                                yield return string.Empty;
-                                break;
-                            }
                         }
                     }
                     else
@@ -163,18 +154,20 @@ namespace SplitSharp
 
 
         /// <summary>
-        /// Split a string, optional quoted value
+        ///     Split a string, optional quoted value
         /// </summary>
         /// <param name="text">Text to split</param>
-        /// <param name="splitChar">Character to split the <paramref name="text"/></param>
+        /// <param name="splitChar">Character to split the <paramref name="text" /></param>
         /// <param name="quoteChar">Quote character</param>
-        /// <param name="escapeChar">Escape for the <paramref name="quoteChar"/>, not escape for the <paramref name="splitChar"/>, use quotes for that.</param>
+        /// <param name="escapeChar">
+        ///     Escape for the <paramref name="quoteChar" />, not escape for the <paramref name="splitChar" />
+        ///     , use quotes for that.
+        /// </param>
         /// <returns></returns>
         public static IEnumerable<string> SplitQuoted(this string text, char splitChar, char quoteChar, char escapeChar)
         {
             if (!string.IsNullOrEmpty(text))
             {
-
                 if (splitChar == quoteChar)
                 {
                     throw new NotSupportedException("Quote character should different from split character");
@@ -193,12 +186,8 @@ namespace SplitSharp
 
 
                 return SplitQuoted2(text, splitChar, quoteChar, escapeChar);
-
-
-
             }
             return new List<string>();
-
         }
 
         private static IEnumerable<string> SplitSelfQuoted2(string text, char splitChar, char quoteAndEscapeChar)
@@ -219,13 +208,6 @@ namespace SplitSharp
 
                 if (isNewPart)
                 {
-                    if (isLastChar)
-                    {
-                        //done
-                        sb.Append(c);
-                        break;
-                    }
-
                     //now only quote for quotemode accepted
                     isNewPart = false;
                     isQuoteAndEscapeChar = c == quoteAndEscapeChar;
@@ -233,30 +215,44 @@ namespace SplitSharp
                     if (isQuoteAndEscapeChar)
                     {
                         //escape of the quote, if the quote is after this.
-
-                        i++;
-                        if (text.Length == i)
+                        if (isLastChar)
                         {
-                            //last char
-                            sb.Append(quoteAndEscapeChar);
+                            //done
+                            sb.Append(c);
                             break;
+                        }
+                        i++;
+                        c = text[i];
+
+                        if (c == quoteAndEscapeChar)
+                        {
+                            sb.Append(quoteAndEscapeChar);
                         }
                         else
                         {
-                            c = text[i];
-                            if (c == quoteAndEscapeChar)
-                            {
-                                sb.Append(quoteAndEscapeChar);
-                            }
-                            else
-                            {
-                                sb.Append(c);
-                                inQuotedMode = true;
-                            }
+                            sb.Append(c);
+                            inQuotedMode = true;
                         }
                     }
+                    else if (isSplitChar)
+                    {
+                        //end of part
 
+                        var part = sb.ToString();
+                        //reset
+                        sb.Length = 0;
+                        //  isInPart = false;
+                        yield return part;
 
+                        if (isLastChar)
+                        {
+                            //done
+                            yield return string.Empty;
+                            break;
+                        }
+
+                        isNewPart = true;
+                    }
                     else
                     {
                         sb.Append(c);
@@ -280,16 +276,11 @@ namespace SplitSharp
                     {
                         sb.Append(c);
                     }
-
-
                 }
                 else
                 {
-
                     if (isSplitChar)
                     {
-
-
                         //end of part
 
                         var part = sb.ToString();
@@ -306,8 +297,6 @@ namespace SplitSharp
                         }
 
                         isNewPart = true;
-
-
                     }
                     else
                     {
@@ -350,13 +339,6 @@ namespace SplitSharp
 
                 if (isNewPart)
                 {
-                    if (isLastChar)
-                    {
-                        //done
-                        sb.Append(c);
-                        break;
-                    }
-
                     isNewPart = false;
                     isQuoteChar = c == quoteChar;
                     isEscapeChar = c == escapeChar;
@@ -365,13 +347,14 @@ namespace SplitSharp
                     {
                         //escape of the quote, if the quote is after this.
 
-                        i++;
-                        if (text.Length == i)
+                        if (isLastChar)
                         {
-                            //last char
-                            sb.Append(escapeChar);
+                            //done
+                            sb.Append(c);
                             break;
                         }
+
+                        i++;
 
                         c = text[i];
                         if (c == quoteChar)
@@ -381,8 +364,26 @@ namespace SplitSharp
                         else
                         {
                             sb.Append(escapeChar);
-                            sb.Append(quoteChar);
+                            sb.Append(c);
                         }
+                    }
+                    else if (isSplitChar)
+                    {
+                        //end of part
+
+                        var part = sb.ToString();
+                        //reset
+                        sb.Length = 0;
+                        yield return part;
+
+                        if (isLastChar)
+                        {
+                            //done
+                            yield return string.Empty;
+                            break;
+                        }
+
+                        isNewPart = true;
                     }
 
                     else if (isQuoteChar)
@@ -430,8 +431,6 @@ namespace SplitSharp
                 }
                 else
                 {
-
-
                     if (isSplitChar)
                     {
                         //end of part
@@ -449,7 +448,6 @@ namespace SplitSharp
                         }
 
                         isNewPart = true;
-
                     }
                     else
                     {

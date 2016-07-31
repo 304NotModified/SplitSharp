@@ -19,95 +19,130 @@ namespace SplitSharp.Tests
         private const char Backslash = '\\';
 
         [Theory]
-        [InlineData("abc", ';', Backslash, "abc")]
-        [InlineData("abc", ';', ';', "abc")]
-        [InlineData("  abc", ';', Backslash, "  abc")]
-        [InlineData("  abc", ';', ';', "  abc")]
-        [InlineData(null, ';', Backslash, "")]
-        [InlineData(null, ';', ';', "")]
-        [InlineData("", ';', Backslash, "")]
-        [InlineData("", ';', ';', "")]
-        [InlineData("   ", ';', Backslash, "   ")]
-        [InlineData("   ", ';', ';', "   ")]
-        [InlineData(@"abc", ';', ',', "abc")]
-        [InlineData(@"a;b;c", ';', Backslash, "a,b,c")]
-        [InlineData(@"a;b;c;", ';', Backslash, "a,b,c,")]
-        [InlineData(@"a;", ';', Backslash, "a,")]
-        [InlineData(@";", ';', Backslash, ",")]
-        [InlineData(@"a;b;c;", ';', Backslash, "a,b,c,")]
-        [InlineData(@";a;b;c", ';', Backslash, ",a,b,c")]
-        [InlineData(@"a;;b;c;", ';', Backslash, "a,,b,c,")]
-        [InlineData(@"a\b;c", ';', Backslash, @"a\b,c")]
-        [InlineData(@"a\;b;c", ';', Backslash, @"a;b,c")]
-        [InlineData(@"a\;b\;c", ';', Backslash, @"a;b;c")]
-        [InlineData(@"a\;b\;c;d", ';', Backslash, @"a;b;c,d")]
-        [InlineData(@"a\;b\;c;d", ';', Backslash, @"a;b;c,d")]
-        [InlineData(@"a\;b;c\;d", ';', Backslash, @"a;b,c;d")]
-        [InlineData(@"a;b;;c", ';', ';', @"a,b;c")]
-        [InlineData(@"a;b;;;;c", ';', ';', @"a,b;;c")]
-        [InlineData(@"a;;b", ';', ';', @"a;b")]
-        [InlineData(@"abc", ';', ';', @"abc")]
-        [InlineData(@"abc\;", ';', Backslash, @"abc;")]
-        [InlineData(@"a'b'c''d", SingleQuote, SingleQuote, @"a,b,c'd")]
 
-        void SplitStringWithEscape(string input, char splitChar, char escapeChar, string output)
+        [InlineData("abc", ';', "abc")]
+        [InlineData("  abc", ';', "  abc")]
+        [InlineData(null, ';', "")]
+        [InlineData("", ';', "")]
+        [InlineData("   ", ';', "   ")]
+        [InlineData(@"a;b;;c", ';', @"a,b;c")]
+        [InlineData(@"a;b;;;;c", ';', @"a,b;;c")]
+        [InlineData(@"a;;b", ';', @"a;b")]
+        [InlineData(@"abc", ';', @"abc")]
+        [InlineData(@"a'b'c''d", SingleQuote, @"a,b,c'd")]
+        [InlineData(@"'a", SingleQuote, @",a")]
+
+        void SplitStringWithSelfEscape(string input, char splitCharAndEscapeChar, string output)
         {
-            if (splitChar == escapeChar)
-            {
-                //also test SplitWithSelfEscape
-                SplitWithSelfEscape2(input, splitChar, output);
-            }
 
-            SplitStringWithEscape2(input, splitChar, escapeChar, output);
-        }
-
-        private static void SplitWithSelfEscape2(string input, char splitChar, string output)
-        {
-            var strings = StringSplitter.SplitWithSelfEscape(input, splitChar).ToArray();
+            //also test SplitWithSelfEscape
+            var strings = StringSplitter.SplitWithSelfEscape(input, splitCharAndEscapeChar).ToArray();
             var result = string.Join(",", strings);
             Assert.Equal(output, result);
+
+
+            SplitStringWithEscape2(input, splitCharAndEscapeChar, splitCharAndEscapeChar, output);
         }
 
-        private static void SplitStringWithEscape2(string input, char splitChar, char escapeChar, string output)
+
+        [Theory]
+        [InlineData("abc", "abc")]
+        [InlineData("  abc", "  abc")]
+        [InlineData(null, "")]
+        [InlineData("", "")]
+        [InlineData("   ", "   ")]
+        [InlineData(@"a;b;c", "a,b,c")]
+        [InlineData(@"a;b;c;", "a,b,c,")]
+        [InlineData(@"a;", "a,")]
+        [InlineData(@";", ",")]
+        [InlineData(@"a;b;c;", "a,b,c,")]
+        [InlineData(@";a;b;c", ",a,b,c")]
+        [InlineData(@"a;;b;c;", "a,,b,c,")]
+        [InlineData(@"a\b;c", @"a\b,c")]
+        [InlineData(@"a;b;c\", @"a,b,c\")]
+        [InlineData(@"a;b;c\;", @"a,b,c;")]
+        [InlineData(@"a;b;c\;;", @"a,b,c;,")]
+        [InlineData(@"a\;b;c", @"a;b,c")]
+        [InlineData(@"a\;b\;c", @"a;b;c")]
+        [InlineData(@"a\;b\;c;d", @"a;b;c,d")]
+        [InlineData(@"a\;b\;c;d", @"a;b;c,d")]
+        [InlineData(@"a\;b;c\;d", @"a;b,c;d")]
+        [InlineData(@"abc\;", @"abc;")]
+        void SplitStringWithEscape(string input, string output)
+        {
+            SplitStringWithEscape2(input, ';', Backslash, output);
+        }
+
+        [InlineData(@"abc", ';', ',', "abc")]
+        void SplitStringWithEscape2(string input, char splitChar, char escapeChar, string output)
         {
             var strings = StringSplitter.SplitWithEscape(input, splitChar, escapeChar).ToArray();
             var result = string.Join(",", strings);
             Assert.Equal(output, result);
         }
 
+        /// <summary>
+        /// Tests with ; as separator, quoted and escaped with '
+        /// </summary>
         [Theory]
-        [InlineData(null, ';', SingleQuote, Backslash, "")]
-        [InlineData(@"\", ';', SingleQuote, Backslash, @"\")]
-        [InlineData(@"'", ';', SingleQuote, Backslash, @"'")]
-        [InlineData(@"' ", ';', SingleQuote, Backslash, @"' ")]
-        [InlineData(@" ' ", ';', SingleQuote, Backslash, @" ' ")]
-        [InlineData(@" ; ", ';', SingleQuote, Backslash, @" , ")]
-        [InlineData(@"abc", ';', SingleQuote, Backslash, "abc")]
-        [InlineData(@"abc;", ';', SingleQuote, Backslash, "abc,")]
-        [InlineData(@"abc'", ';', SingleQuote, Backslash, "abc'")]
-        [InlineData(@"abc\", ';', SingleQuote, Backslash, @"abc\")]
-        [InlineData(@"abc\\", ';', SingleQuote, Backslash, @"abc\\")]
-        [InlineData(@"abc\b", ';', SingleQuote, Backslash, @"abc\b")]
-        [InlineData(@"a;b;c", ';', SingleQuote, Backslash, "a,b,c")]
-        [InlineData(@"a;'b;c'", ';', SingleQuote, Backslash, "a,b;c")]
-        [InlineData(@"a;'b;c", ';', SingleQuote, Backslash, "a,'b;c")]
-        [InlineData(@"a;b'c;d", ';', SingleQuote, Backslash, "a,b'c,d")]
-        [InlineData(@"a;\'b;c", ';', SingleQuote, Backslash, "a,'b,c")]
-        [InlineData(@"a;''b;c", ';', SingleQuote, SingleQuote, "a,'b,c")]
-        [InlineData(@"a;''b;c'", ';', SingleQuote, SingleQuote, "a,'b,c'")]
-        [InlineData(@"abc", ';', SingleQuote, SingleQuote, "abc")]
-        [InlineData(@"abc'", ';', SingleQuote, SingleQuote, "abc'")]
-        [InlineData(@"''abc'", ';', SingleQuote, SingleQuote, "'abc'")]
-        [InlineData(@"'abc'", ';', SingleQuote, SingleQuote, "abc")]
-        [InlineData(@"'ab;c'", ';', SingleQuote, SingleQuote, "ab;c")]
-        [InlineData(@"'ab\c'", ';', SingleQuote, SingleQuote, @"ab\c")]
-        [InlineData(@"'", ';', SingleQuote, SingleQuote, @"'")]
-        [InlineData(@"a'", ';', SingleQuote, SingleQuote, @"a'")]
-        [InlineData(@"\", ';', SingleQuote, SingleQuote, @"\")]
-        [InlineData(@"a\", ';', SingleQuote, SingleQuote, @"a\")]
-        [InlineData(@"\b", ';', SingleQuote, SingleQuote, @"\b")]
-        [InlineData(@"'\'", ';', SingleQuote, Backslash, @"'\'")]
-        [InlineData(@"'\''", ';', SingleQuote, Backslash, @"'\'")] //todo check case
+        [InlineData(@";", @",")]
+        [InlineData(@";;", @",,")]
+        [InlineData(@"a;", @"a,")]
+        [InlineData(@"a;''b;c", "a,'b,c")]
+        [InlineData(@"a;''b;c'", "a,'b,c'")]
+        [InlineData(@"abc", "abc")]
+        [InlineData(@"abc'", "abc'")]
+        [InlineData(@"''abc'", "'abc'")]
+        [InlineData(@"'abc'", "abc")]
+        [InlineData(@"'ab;c'", "ab;c")]
+        [InlineData(@"'ab\c'", @"ab\c")]
+        [InlineData(@"'", @"'")]
+        [InlineData(@"'a", @"'a")]
+        [InlineData(@"a'", @"a'")]
+        [InlineData(@"\", @"\")]
+        [InlineData(@"a\", @"a\")]
+        [InlineData(@"\b", @"\b")]
+
+        private void SplitStringWithQuotes_selfQuoted(string input, string output)
+        {
+            SplitStringWithQuotes(input, ';', SingleQuote, SingleQuote, output);
+        }
+
+        /// <summary>
+        /// Tests with ; as separator, quoted with single quote and escaped with backslash
+        /// </summary>
+        [Theory]
+        [InlineData(null, "")]
+        [InlineData(@"\", @"\")]
+        [InlineData(@"'", @"'")]
+        [InlineData(@"' ", @"' ")]
+        [InlineData(@"a'", "a'")]
+        [InlineData(@" ' ", @" ' ")]
+        [InlineData(@" ; ", @" , ")]
+        [InlineData(@";", @",")]
+        [InlineData(@";;", @",,")]
+        [InlineData(@"abc", "abc")]
+        [InlineData(@"abc;", "abc,")]
+        [InlineData(@"abc'", "abc'")]
+        [InlineData(@"abc\", @"abc\")]
+        [InlineData(@"abc\\", @"abc\\")]
+        [InlineData(@"abc\b", @"abc\b")]
+        [InlineData(@"a;b;c", "a,b,c")]
+        [InlineData(@"a;'b;c'", "a,b;c")]
+        [InlineData(@"a;'b;c", "a,'b;c")]
+        [InlineData(@"a;b'c;d", "a,b'c,d")]
+        [InlineData(@"a;\'b;c", "a,'b,c")]
+        [InlineData(@"\b", @"\b")]
+        [InlineData(@"'\'", @"'\'")]
+        [InlineData(@"'\''", @"'\'")] //todo check case
+
+        private void SplitStringWithQuotes_escaped(string input, string output)
+        {
+            SplitStringWithQuotes(input, ';', SingleQuote, Backslash, output);
+        }
+
+
+
 
         void SplitStringWithQuotes(string input, char splitChar, char quoteChar, char escapeChar, string output)
         {
