@@ -59,7 +59,7 @@ namespace SplitSharp
 
                     //prev not escaped, then check splitchar
                     var isSplitChar = c == splitChar;
-
+                    var isEscape = c == escapeChar;
                     if (isSplitChar)
                     {
                         if (prevWasEscape)
@@ -68,8 +68,6 @@ namespace SplitSharp
                             if (sb.Length > 0)
                                 sb.Length--;
                             sb.Append(c);
-                            //if splitchar ==escapechar, then in this case it's used as split
-                            prevWasEscape = false;
                         }
                         else
                         {
@@ -77,14 +75,16 @@ namespace SplitSharp
                             //reset
                             sb.Length = 0;
                             yield return part;
-                          
+
                         }
                     }
                     else
                     {
                         sb.Append(c);
-                        prevWasEscape = c == escapeChar;
+                       
                     }
+                   
+                    prevWasEscape = isEscape;
                 }
                 var lastPart = GetLastPart(sb);
                 if (lastPart != null)
@@ -111,13 +111,24 @@ namespace SplitSharp
                     var c = text[i];
                     var isSplitAndEscape = c == splitAndEscapeChar;
                     var isLastChar = i == text.Length - 1;
-                    if (prevWasEscape)
+
+                    if (isSplitAndEscape)
                     {
-                        if (isSplitAndEscape)
+                        if (prevWasEscape)
                         {
-                            prevWasEscape = false;
-                        }
+                            //skip
+                            }
                         else
+                        {
+                            var part = sb.ToString();
+                            sb.Length = 0;
+                            yield return part;
+
+                        }
+                    }
+                    else
+                    {
+                        if (prevWasEscape)
                         {
                             //if prevWasEscape, always appended so length >0
                             //if (sb.Length > 0) 
@@ -125,29 +136,17 @@ namespace SplitSharp
                             var part = sb.ToString();
                             //reset
                             sb.Length = 0;
-                            prevWasEscape = false;
                             sb.Append(c);
                             yield return part;
-                        }
-                    }
-                    else
-                    {
-                        if (isLastChar && isSplitAndEscape)
-                        {
-                            var part = sb.ToString();
-                            sb.Length = 0;
-                            yield return part;
-                            yield return string.Empty;
                         }
                         else
                         {
                             sb.Append(c);
-                            if (isSplitAndEscape)
-                            {
-                                prevWasEscape = true;
-                            }
                         }
+
                     }
+                    prevWasEscape = isSplitAndEscape;
+
                 }
                 var lastPart = GetLastPart(sb);
                 if (lastPart != null)
