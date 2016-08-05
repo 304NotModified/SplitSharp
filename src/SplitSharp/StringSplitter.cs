@@ -59,9 +59,10 @@ namespace SplitSharp
 
                     //prev not escaped, then check splitchar
                     var isSplitChar = c == splitChar;
-                    if (prevWasEscape)
+
+                    if (isSplitChar)
                     {
-                        if (isSplitChar)
+                        if (prevWasEscape)
                         {
                             //overwrite escapechar
                             if (sb.Length > 0)
@@ -72,36 +73,27 @@ namespace SplitSharp
                         }
                         else
                         {
-                            sb.Append(c);
-                            prevWasEscape = c == escapeChar;
-                        }
-                    }
-                    else
-                    {
-                        if (isSplitChar)
-                        {
                             var part = sb.ToString();
                             //reset
                             sb.Length = 0;
                             yield return part;
-                            if (text.Length - 1 == i)
-                            {
-                                //done
-                                yield return string.Empty;
-                                break;
-                            }
+                          
                         }
-                        else
-                        {
-                            sb.Append(c);
-                            prevWasEscape = c == escapeChar;
-                        }
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                        prevWasEscape = c == escapeChar;
                     }
                 }
                 var lastPart = GetLastPart(sb);
                 if (lastPart != null)
                 {
                     yield return lastPart;
+                }
+                else
+                {
+                    yield return string.Empty;
                 }
             }
         }
