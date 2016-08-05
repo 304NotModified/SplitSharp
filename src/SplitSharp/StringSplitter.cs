@@ -117,10 +117,11 @@ namespace SplitSharp
                 for (i = 0; i < text.Length; i++)
                 {
                     var c = text[i];
-                    var isSplitChar = c == splitAndEscapeChar;
+                    var isSplitAndEscape = c == splitAndEscapeChar;
+                    var isLastChar = i == text.Length - 1;
                     if (prevWasEscape)
                     {
-                        if (isSplitChar)
+                        if (isSplitAndEscape)
                         {
                             prevWasEscape = false;
                         }
@@ -139,10 +140,20 @@ namespace SplitSharp
                     }
                     else
                     {
-                        sb.Append(c);
-                        if (isSplitChar)
+                        if (isLastChar && isSplitAndEscape)
                         {
-                            prevWasEscape = true;
+                            var part = sb.ToString();
+                            sb.Length = 0;
+                            yield return part;
+                            yield return string.Empty;
+                        }
+                        else
+                        {
+                            sb.Append(c);
+                            if (isSplitAndEscape)
+                            {
+                                prevWasEscape = true;
+                            }
                         }
                     }
                 }
@@ -265,7 +276,7 @@ namespace SplitSharp
                 {
                     if (isQuoteAndEscapeChar)
                     {
-                        //skip quoteChar
+                        //skip escapechar
                         i++;
                         //    isInPart = false;
                         inQuotedMode = false;
@@ -408,7 +419,14 @@ namespace SplitSharp
                     if (isQuoteChar)
                     {
                         if (prevIsEscape)
+
                         {
+                            //skip escapechar
+
+                            if (sb.Length > 0)
+                                sb.Length--;
+
+                            //todo skip escape 
                             sb.Append(c);
                             break;
                         }
