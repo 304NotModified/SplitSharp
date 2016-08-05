@@ -24,7 +24,9 @@ namespace SplitSharp.Tests
         [InlineData("  abc", ';', "  abc")]
         [InlineData(null, ';', "")]
         [InlineData("", ';', "")]
-        [InlineData(";", ';', ";")] //todo check case
+        [InlineData(";", ';', ",")] 
+        [InlineData("a;", ';', "a,")] 
+        [InlineData("a; ", ';', "a, ")]
         [InlineData("   ", ';', "   ")]
         [InlineData(@"a;b;;c", ';', @"a,b;c")]
         [InlineData(@"a;b;;;;c", ';', @"a,b;;c")]
@@ -134,8 +136,9 @@ namespace SplitSharp.Tests
         [InlineData(@"a;b'c;d", "a,b'c,d")]
         [InlineData(@"a;\'b;c", "a,'b,c")]
         [InlineData(@"\b", @"\b")]
-        [InlineData(@"'\'", @"'\'")]
-        [InlineData(@"'\''", @"'\'")] //todo check case
+        [InlineData(@"'\'", @"''")]
+        [InlineData(@"'\''", @"''")]   //todo check case
+        [InlineData(@"'\\'", @"'\'")]  //todo check case
 
         private void SplitStringWithQuotes_escaped(string input, string output)
         {
