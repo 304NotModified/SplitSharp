@@ -19,16 +19,16 @@
       "imports": "dnxcore50",
       "buildOptions": { "define": [ "NO_ASSEMBLY_GUID" ] }
     },
-    "netstandard1.1": {
-      "imports": "dnxcore50"
-    },
-    "net35": {
+    //"netstandard1.1": {
+    //  "imports": "dnxcore50"
+    //},
+    //"net35": {
 
-    },
+    //},
 
-    "net10": {
-      "buildOptions": { "define": [ "CUSTOM_CSHARP_EXT" ] }
-    }
+    //"net10": {
+    //  "buildOptions": { "define": [ "CUSTOM_CSHARP_EXT" ] }
+    //}
 
   }
 }

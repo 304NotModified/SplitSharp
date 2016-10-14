@@ -1,494 +1,235 @@
-﻿// 
-// Copyright (c) 2016 Julian Verdurmen.
-// 
-
-#region
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
-#endregion
+using static System.Diagnostics.Debug;
 
 namespace SplitSharp
 {
-    /// <summary>
-    /// Split a string
-    /// </summary>
-    public static class StringSplitter
+    public class StringSplitter
     {
-        /// <summary>
-        /// Split string with escape. The escape char is the same as the splitchar
-        /// </summary>
-        /// <param name="text"></param>
-        /// <param name="splitChar">split char. escaped also with this char</param>
-        /// <returns></returns>
-        public static IEnumerable<string> SplitWithSelfEscape(this string text, char splitChar)
+        public static IEnumerable<string> SplitQuoted(string template, char delimiter, char quote, char escape)
         {
-            return SplitWithSelfEscape2(text, splitChar);
+            if (template == null)
+                throw new ArgumentNullException(nameof(template));
+            var parser = new StringSplitter(template, delimiter, quote, escape);
+            return parser.Parse();
         }
 
+        private char _delimiter; // = ',';
+        private char _escape; // = ',';
         /// <summary>
-        /// Split string with escape
+        /// Escape for Quote
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="splitChar"></param>
-        /// <param name="escapeChar"></param>
-        /// <returns></returns>
-        public static IEnumerable<string> SplitWithEscape(this string text, char splitChar, char escapeChar)
-        {
-            if (splitChar == escapeChar)
-            {
-                return SplitWithSelfEscape2(text, splitChar);
-            }
+        private char _quote;// = '\'';
+        private string _template;
+        private int _templateLength;
+        private int _currentPos;
+        private int _prevPos;
 
-            return SplitWithEscape2(text, splitChar, escapeChar);
+        private StringSplitter(string template, char delimiter, char quote, char escape)
+        {
+            _template = template;
+            _delimiter = delimiter;
+            _quote = quote;
+            _escape = escape;
+            _templateLength = template.Length;
         }
 
 
-        private static IEnumerable<string> SplitWithEscape2(string text, char splitChar, char escapeChar)
+        private IEnumerable<string> Parse()
         {
-            if (!string.IsNullOrEmpty(text))
+
+            while (!IsDone())
             {
-                var prevWasEscape = false;
-                int i;
-                var sb = new StringBuilder();
-                for (i = 0; i < text.Length; i++)
+                if (Peek() == _quote && PrevPeek() != _escape)
                 {
-                    var c = text[i];
-
-                    //prev not escaped, then check splitchar
-                    var isSplitChar = c == splitChar;
-                    var isEscape = c == escapeChar;
-                    if (isSplitChar)
-                    {
-                        if (prevWasEscape)
-                        {
-                            //overwrite escapechar
-                            if (sb.Length > 0)
-                                sb.Length--;
-                            sb.Append(c);
-                        }
-                        else
-                        {
-                            var part = sb.ToString();
-                            //reset
-                            sb.Length = 0;
-                            yield return part;
-
-                        }
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                       
-                    }
-                   
-                    prevWasEscape = isEscape;
-                }
-                var lastPart = GetLastPart(sb);
-                if (lastPart != null)
-                {
-                    yield return lastPart;
+                    yield return ReadQuoted();
                 }
                 else
                 {
-                    yield return string.Empty;
+                    yield return ReadUnQuoted();
                 }
-            }
-        }
 
-        private static IEnumerable<string> SplitWithSelfEscape2(string text, char splitAndEscapeChar)
-        {
-            if (!string.IsNullOrEmpty(text))
+
+            }
+            if (_currentPos != _prevPos)
             {
-                var prevWasEscape = false;
-                int i;
-                var sb = new StringBuilder();
-                //if same, handle different
-                for (i = 0; i < text.Length; i++)
-                {
-                    var c = text[i];
-                    var isSplitAndEscape = c == splitAndEscapeChar;
-                    var isLastChar = i == text.Length - 1;
-
-                    if (isSplitAndEscape)
-                    {
-                        if (prevWasEscape)
-                        {
-                            //skip
-                            }
-                        else
-                        {
-                            var part = sb.ToString();
-                            sb.Length = 0;
-                            yield return part;
-
-                        }
-                    }
-                    else
-                    {
-                        if (prevWasEscape)
-                        {
-                            //if prevWasEscape, always appended so length >0
-                            //if (sb.Length > 0) 
-                            sb.Length--;
-                            var part = sb.ToString();
-                            //reset
-                            sb.Length = 0;
-                            sb.Append(c);
-                            yield return part;
-                        }
-                        else
-                        {
-                            sb.Append(c);
-                        }
-
-                    }
-                    prevWasEscape = isSplitAndEscape;
-
-                }
-                var lastPart = GetLastPart(sb);
-                if (lastPart != null)
-                {
-                    yield return lastPart;
-                }
+                yield return GetSubString();
             }
+
+            //if (_currentPos == _templateLength - 1)
+            //{
+            //    //get last past
+            //    _currentPos++;
+            //    yield return GetSubString();
+            //}
+
+            //return null;
+
         }
 
+        private string ReadQuoted()
+        {
+            SkipFirstChar(_quote);
+            //read quoted
+            while (!IsDone())
+            {
+                var found = ReadUntil(_quote);
+                if (!found)
+                {
+                    //started with quote, but not ended. Restore start _quote
+                    var text = _quote + GetSubString();
+                    //_currentPos = _templateLength;//done
+                    return text;
+                }
+                //find until quote with isn't escaped
+                if (PrevPeek() != _escape)
+                {
+                    var text = GetSubString();
+                    SkipFirstChar(_quote);
+                    return text;
+                }
+                //skip
+                SkipPrevChar(_escape);
+                _currentPos++; //read 
+            }
+            //end of template
+            return GetSubString();
+        }
 
         /// <summary>
-        /// Split a string, optional quoted value
+        /// Read unoquted, skip last delimiter
         /// </summary>
-        /// <param name="text">Text to split</param>
-        /// <param name="splitChar">Character to split the <paramref name="text" /></param>
-        /// <param name="quoteChar">Quote character</param>
-        /// <param name="escapeChar">
-        /// Escape for the <paramref name="quoteChar" />, not escape for the <paramref name="splitChar" />
-        /// , use quotes for that.
-        /// </param>
         /// <returns></returns>
-        public static IEnumerable<string> SplitQuoted(this string text, char splitChar, char quoteChar, char escapeChar)
+        private string ReadUnQuoted()
         {
-            if (!string.IsNullOrEmpty(text))
+            var found = ReadUntil(_delimiter);
+            var text = GetSubString();
+            //skip delimiter
+            if (found)
             {
-                if (splitChar == quoteChar)
-                {
-                    throw new NotSupportedException("Quote character should different from split character");
-                }
-
-
-                if (splitChar == escapeChar)
-                {
-                    throw new NotSupportedException("Escape character should different from split character");
-                }
-
-                if (quoteChar == escapeChar)
-                {
-                    return SplitSelfQuoted2(text, splitChar, quoteChar);
-                }
-
-
-                return SplitQuoted2(text, splitChar, quoteChar, escapeChar);
+                SkipFirstChar(_delimiter);
             }
-            return new List<string>();
+            return text;
         }
 
-        private static IEnumerable<string> SplitSelfQuoted2(string text, char splitChar, char quoteAndEscapeChar)
+        private List<int> _skipCharIndexes;
+
+        private void SkipCurrentChar()
         {
-            var inQuotedMode = false;
-            int i;
-            var sb = new StringBuilder();
-            var isNewPart = true;
+            _skipCharIndexes = _skipCharIndexes ?? new List<int>();
+            _skipCharIndexes.Add(_currentPos);
+        }
 
-            for (i = 0; i < text.Length; i++)
+        private void SkipFirstChar(char c)
+        {
+            var pos = _currentPos;
+            Assert(_template[pos] == c);
+            if (_prevPos == _currentPos)
             {
-                var c = text[i];
-
-                //prev not escaped, then check splitchar
-                var isSplitChar = c == splitChar;
-                var isQuoteAndEscapeChar = c == quoteAndEscapeChar;
-                var isLastChar = i == text.Length - 1;
-
-                if (isNewPart)
-                {
-                    //now only quote for quotemode accepted
-                    isNewPart = false;
-                    isQuoteAndEscapeChar = c == quoteAndEscapeChar;
-
-                    if (isQuoteAndEscapeChar)
-                    {
-                        //escape of the quote, if the quote is after this.
-                        if (isLastChar)
-                        {
-                            //done
-                            sb.Append(c);
-                            break;
-                        }
-                        i++;
-                        c = text[i];
-
-                        if (c == quoteAndEscapeChar)
-                        {
-                            sb.Append(quoteAndEscapeChar);
-                        }
-                        else
-                        {
-                            sb.Append(c);
-                            inQuotedMode = true;
-                        }
-                    }
-                    else if (isSplitChar)
-                    {
-                        //end of part
-
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        //  isInPart = false;
-                        yield return part;
-
-                        if (isLastChar)
-                        {
-                            //done
-                            yield return string.Empty;
-                            break;
-                        }
-
-                        isNewPart = true;
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
-
-                else if (inQuotedMode)
-                {
-                    if (isQuoteAndEscapeChar)
-                    {
-                        //skip escapechar
-                        i++;
-                        //    isInPart = false;
-                        inQuotedMode = false;
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        yield return part;
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
-                else
-                {
-                    if (isSplitChar)
-                    {
-                        //end of part
-
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        //  isInPart = false;
-                        yield return part;
-
-                        if (isLastChar)
-                        {
-                            //done
-                            yield return string.Empty;
-                            break;
-                        }
-
-                        isNewPart = true;
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
+                _currentPos++;
             }
+            _prevPos++;
+        }
 
-            var lastPart = GetLastPart(sb);
-            if (inQuotedMode)
+        private void SkipPrevChar(char c)
+        {
+            if (_currentPos > 0)
             {
-                //append quote back
-                lastPart = quoteAndEscapeChar + lastPart;
-            }
-
-            if (lastPart != null)
-            {
-                yield return lastPart;
+                _skipCharIndexes = _skipCharIndexes ?? new List<int>();
+                var prevPos = _currentPos - 1;
+                Assert(_template[prevPos] == c);
+                _skipCharIndexes.Add(prevPos);
             }
         }
 
-        private static IEnumerable<string> SplitQuoted2(string text, char splitChar, char quoteChar, char escapeChar)
+
+        private bool IsDone() => _currentPos >= _templateLength;
+
+        private char? PrevPeek()
         {
-            var inQuotedMode = false;
-            int i;
-            var sb = new StringBuilder();
-            var isNewPart = true;
+            char? nullChar = null;
+            // ReSharper disable once ExpressionIsAlwaysNull
+            return _currentPos == 0 ? nullChar : _template[_currentPos - 1];
+        }
 
-            var prevIsEscape = false;
-            for (i = 0; i < text.Length; i++)
+        private char Peek() => _template[_currentPos];
+
+        private char Read() => _template[_currentPos++];
+
+        // ReSharper disable once UnusedParameter.Local
+        private void Skip(char c)
+        {
+            // Can be out of bounds, but never in correct use (expects a required char).
+            Assert(_template[_currentPos] == c);
+            _prevPos++;
+        }
+
+        private void SkipUntil(char search)
+        {
+            int i = _template.IndexOf(search, _currentPos);
+            if (i == -1)
             {
-                var c = text[i];
-
-                //prev not escaped, then check splitchar
-                var isSplitChar = c == splitChar;
-                var isQuoteChar = c == quoteChar;
-                var isEscapeChar = c == escapeChar;
-                var isLastChar = i == text.Length - 1;
-
-
-                if (isNewPart)
-                {
-                    isNewPart = false;
-                    isQuoteChar = c == quoteChar;
-                    isEscapeChar = c == escapeChar;
-
-                    if (isEscapeChar)
-                    {
-                        //escape of the quote, if the quote is after this.
-
-                        if (isLastChar)
-                        {
-                            //done
-                            sb.Append(c);
-                            break;
-                        }
-
-                        i++;
-
-                        c = text[i];
-                        if (c == quoteChar)
-                        {
-                            sb.Append(quoteChar);
-                        }
-                        else
-                        {
-                            sb.Append(escapeChar);
-                            sb.Append(c);
-                        }
-                    }
-                    else if (isSplitChar)
-                    {
-                        //end of part
-
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        yield return part;
-
-                        if (isLastChar)
-                        {
-                            //done
-                            yield return string.Empty;
-                            break;
-                        }
-
-                        isNewPart = true;
-                    }
-
-                    else if (isQuoteChar)
-                    {
-                        //skip quoteChar
-                        if (sb.Length > 0)
-                            sb.Length--;
-                        //isInPart = true;
-                        inQuotedMode = true;
-                        //todo check escape quoteChar
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
-
-                else if (inQuotedMode)
-                {
-                    if (isQuoteChar)
-                    {
-                        if (prevIsEscape)
-
-                        {
-                            //skip escapechar
-
-                            if (sb.Length > 0)
-                                sb.Length--;
-
-                            //todo skip escape 
-                            sb.Append(c);
-                            break;
-                        }
-
-
-                        //skip quoteChar
-                        i++;
-                        //    isInPart = false;
-                        inQuotedMode = false;
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        yield return part;
-                    }
-
-                    else
-                    {
-                        prevIsEscape = isEscapeChar;
-
-                        sb.Append(c);
-                    }
-                }
-                else
-                {
-                    if (isSplitChar)
-                    {
-                        //end of part
-
-                        var part = sb.ToString();
-                        //reset
-                        sb.Length = 0;
-                        yield return part;
-
-                        if (isLastChar)
-                        {
-                            //done
-                            yield return string.Empty;
-                            break;
-                        }
-
-                        isNewPart = true;
-                    }
-                    else
-                    {
-                        sb.Append(c);
-                    }
-                }
+                _prevPos = i;
             }
-
-            var lastPart = GetLastPart(sb);
-            if (inQuotedMode)
+            else
             {
-                //append quote back
-                lastPart = quoteChar + lastPart;
-            }
 
-            if (lastPart != null)
-            {
-                yield return lastPart;
             }
         }
 
-        private static string GetLastPart(StringBuilder sb)
+        /// <summary>
+        /// Read until search or to end
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns>found <paramref name="search"/>?</returns>
+        private bool ReadUntil(char search)
         {
-            var length = sb.Length;
-            if (length > 0)
+            int i = _template.IndexOf(search, _currentPos);
+            if (i > -1)
             {
-                var lastPart = sb.ToString();
-                return lastPart;
+                _currentPos = i;
+                return true;
             }
-            return null;
+            //read to end
+            _currentPos = _templateLength;
+            return false;
+        }
+
+
+
+        private string GetSubString()
+        {
+            var length = _currentPos - _prevPos;
+            if (length <= 0)
+            {
+                return string.Empty;
+            }
+            var substring = _template.Substring(_prevPos, length);
+            _prevPos = _currentPos;
+            if (_skipCharIndexes != null)
+            {
+                var sb = new StringBuilder(substring);
+                foreach (var skipCharIndex in _skipCharIndexes)
+                {
+                    sb.Remove(skipCharIndex, 1);
+
+                }
+
+                _skipCharIndexes = null;
+                return sb.ToString();
+            }
+            return substring;
+        }
+
+        public static IEnumerable<string> SplitWithSelfEscape(string input, char splitCharAndEscapeChar)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static IEnumerable<string> SplitWithEscape(string input, char splitChar, char escapeChar)
+        {
+            throw new NotImplementedException();
         }
     }
 }
